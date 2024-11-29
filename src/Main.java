@@ -11,7 +11,7 @@ public class Main {
 
             System.out.println("Выберите действие: 1 - Зашифровать, 2 - Расшифровать");
             int choice = scanner.nextInt();
-            scanner.nextLine(); // Пропустить оставшийся перевод строки
+            scanner.nextLine();
 
             System.out.print("Введите числовой ключ: ");
             String keyWord = scanner.nextLine();
@@ -84,7 +84,12 @@ public class Main {
                 }
             }
         }
-
+//        for (int i = 0; i < result.length(); i++) {
+//            if(result.charAt(i) == ' '){
+//                result.deleteCharAt(i);
+//            }
+//        }
+//        System.out.println(result);
         return result.toString().trim();
     }
 
