@@ -1,143 +1,135 @@
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
-// 52413
+
 public class Main {
 
     public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        List<Integer> spacePositions = new ArrayList<>();
 
         while (true) {
-
-            Scanner scanner = new Scanner(System.in);
-
-            System.out.println("Выберите действие: 1 - Зашифровать, 2 - Расшифровать");
+            System.out.println("Выберите действие:");
+            System.out.println("1 - Зашифровать текст 2 - Расшифровать текст");
             int choice = scanner.nextInt();
-            scanner.nextLine();
-
-            System.out.print("Введите числовой ключ: ");
-            String keyWord = scanner.nextLine();
+            scanner.nextLine(); // Пропустить перевод строки
 
             if (choice == 1) {
                 System.out.print("Введите текст для шифрования: ");
                 String input = scanner.nextLine();
-                String encryptedText = translate(input, keyWord, true);
+
+                System.out.print("Введите числовой ключ: ");
+                String keyWord = scanner.nextLine();
+
+                // Сохраняем позиции пробелов
+                spacePositions.clear();
+                spacePositions.addAll(getSpacePositions(input));
+                String inputWithoutSpaces = input.replace(" ", "");
+
+                // Шифруем текст
+                String encryptedText = translate(inputWithoutSpaces, true, keyWord);
                 System.out.println("Зашифрованный текст: " + encryptedText);
             } else if (choice == 2) {
                 System.out.print("Введите текст для расшифровки: ");
                 String input = scanner.nextLine();
-                String decryptedText = translate(input, keyWord, false);
-                System.out.println("Расшифрованный текст: " + decryptedText);
+
+                System.out.print("Введите числовой ключ: ");
+                String keyWord = scanner.nextLine();
+
+                // Расшифровываем текст
+                String decryptedText = translate(input, false, keyWord);
+
+                // Восстанавливаем пробелы
+                String resultWithSpaces = restoreSpaces(decryptedText, spacePositions);
+                System.out.println("Расшифрованный текст: " + resultWithSpaces);
+            } else if (choice == 0) {
+                System.out.println("Выход из программы.");
+                break;
             } else {
-                System.out.println("Неверный выбор!");
+                System.out.println("Неверный выбор. Попробуйте снова.");
             }
         }
+        scanner.close();
     }
 
-    public static String translate(String text, String keyWord, boolean encode) {
+    public static String translate(String text, boolean encode, String keyWord) {
         int columns = keyWord.length();
         int rows = (int) Math.ceil((double) text.length() / columns);
         char[][] table = new char[rows][columns];
+        int[] indexes = new int[columns];
+
+        // Получаем порядок столбцов по ключу
+        for (int i = 0; i < keyWord.length(); i++) {
+            indexes[i] = keyWord.indexOf(String.valueOf(i + 1));
+        }
 
         StringBuilder result = new StringBuilder();
 
-        // Индексы перестановки из числового ключа
-        int[] indexes = getKeyOrder(keyWord);
-
         if (encode) {
-            // Заполняем таблицу символами текста
+            // Заполняем таблицу символами текста построчно
             int count = 0;
             for (int i = 0; i < rows; i++) {
                 for (int j = 0; j < columns; j++) {
                     if (count < text.length()) {
                         table[i][j] = text.charAt(count++);
                     } else {
-                        table[i][j] = ' '; // Пустые ячейки заполняем пробелами
+                        table[i][j] = '\0'; // Пустые ячейки
                     }
                 }
             }
 
+            // Печатаем таблицу шифрования
             printTable(table, keyWord);
 
-            // Считываем таблицу по столбцам в порядке ключа
+            // Читаем таблицу по столбцам в порядке индексов
             for (int index : indexes) {
                 for (int i = 0; i < rows; i++) {
-//                    System.out.println(i + " " + index + " " + table[i][index]);
-                    result.append(table[i][index]);
+                    if (table[i][index] != '\0') {
+                        result.append(table[i][index]);
+                    }
                 }
             }
-
-            StringBuilder res = new StringBuilder();
-            for (int i = 0; i < result.length(); i++) {
-                if (result.charAt(i) == ' '){
-                    continue;
-                }
-                res.append(result.charAt(i));
-
-            }
-            String s = String.valueOf(res);
-            return s;
-//            System.out.println(res);
-
-
-
         } else {
-            // Заполняем таблицу зашифрованным текстом по столбцам
+            // Определяем количество символов в каждом столбце
+            int[] colLengths = new int[columns];
+            int fullCols = text.length() % columns == 0 ? columns : text.length() % columns;
+            for (int i = 0; i < columns; i++) {
+                colLengths[i] = (i < fullCols) ? rows : rows - 1;
+            }
+
+            // Заполняем таблицу текстом по столбцам в порядке индексов
             int count = 0;
             for (int index : indexes) {
-                for (int i = 0; i < rows; i++) {
+                for (int i = 0; i < colLengths[index]; i++) {
                     if (count < text.length()) {
                         table[i][index] = text.charAt(count++);
                     }
                 }
             }
 
+            // Печатаем таблицу расшифровки
             printTable(table, keyWord);
 
-            // Считываем таблицу построчно
+            // Читаем таблицу построчно
             for (int i = 0; i < rows; i++) {
                 for (int j = 0; j < columns; j++) {
-                    result.append(table[i][j]);
+                    if (table[i][j] != '\0') {
+                        result.append(table[i][j]);
+                    }
                 }
             }
         }
-//        for (int i = 0; i < result.length(); i++) {
-//            if(result.charAt(i) == ' '){
-//                result.deleteCharAt(i);
-//            }
-//        }
-//        System.out.println(result);
-        return result.toString().trim();
-    }
 
-    private static int[] getKeyOrder(String keyWord) {
-        // Преобразуем ключ в массив чисел
-        Integer[] keyArray = new Integer[keyWord.length()];
-        for (int i = 0; i < keyWord.length(); i++) {
-            keyArray[i] = Character.getNumericValue(keyWord.charAt(i));
-        }
-
-        // Копируем и сортируем ключ
-        Integer[] sortedKeyArray = keyArray.clone();
-        Arrays.sort(sortedKeyArray);
-
-        // Определяем порядок индексов
-        int[] order = new int[keyWord.length()];
-        for (int i = 0; i < keyWord.length(); i++) {
-            int index = Arrays.asList(sortedKeyArray).indexOf(keyArray[i]);
-            order[index] = i;
-            sortedKeyArray[index] = null; // Убираем обработанный индекс
-        }
-
-        return order;
+        return result.toString();
     }
 
     private static void printTable(char[][] table, String keyWord) {
-        // Выводим ключ
+        System.out.println("Таблица:");
         for (char ch : keyWord.toCharArray()) {
             System.out.print(ch + " ");
         }
         System.out.println();
 
-        // Выводим таблицу
         for (char[] row : table) {
             for (char cell : row) {
                 System.out.print((cell == '\0' ? ' ' : cell) + " ");
@@ -145,5 +137,23 @@ public class Main {
             System.out.println();
         }
         System.out.println();
+    }
+
+    private static List<Integer> getSpacePositions(String text) {
+        List<Integer> positions = new ArrayList<>();
+        for (int i = 0; i < text.length(); i++) {
+            if (text.charAt(i) == ' ') {
+                positions.add(i);
+            }
+        }
+        return positions;
+    }
+
+    private static String restoreSpaces(String text, List<Integer> spacePositions) {
+        StringBuilder restored = new StringBuilder(text);
+        for (int i = 0; i < spacePositions.size(); i++) {
+            restored.insert(spacePositions.get(i), " ");
+        }
+        return restored.toString();
     }
 }
