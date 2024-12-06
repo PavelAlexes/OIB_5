@@ -64,6 +64,21 @@ public class Main {
                     result.append(table[i][index]);
                 }
             }
+
+            StringBuilder res = new StringBuilder();
+            for (int i = 0; i < result.length(); i++) {
+                if (result.charAt(i) == ' '){
+                    continue;
+                }
+                res.append(result.charAt(i));
+
+            }
+            String s = String.valueOf(res);
+            return s;
+//            System.out.println(res);
+
+
+
         } else {
             // Заполняем таблицу зашифрованным текстом по столбцам
             int count = 0;
